@@ -7,6 +7,8 @@ import com.ippon.bankapp.service.exception.AccountLastNameExistsException;
 import com.ippon.bankapp.service.exception.AccountNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
 @Service
 public class AccountService {
 
@@ -43,6 +45,23 @@ public class AccountService {
                 .findByLastName(lastName)
                 .orElseThrow(AccountNotFoundException::new);
 
+        return mapAccountToDTO(account);
+    }
+
+    public AccountDTO getAccountFirstName(String firstName) {
+        Account account = accountRepository
+                .findByFirstName(firstName)
+                .orElseThrow(AccountNotFoundException::new);
+
+        return mapAccountToDTO(account);
+    }
+
+    public AccountDTO depositId(int id, BigDecimal amount) {
+        Account account = accountRepository
+                .findById(id)
+                .orElseThrow(AccountNotFoundException::new);
+
+        account.setBalance(account.getBalance().add(amount));
         return mapAccountToDTO(account);
     }
 

@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api")
@@ -23,9 +24,18 @@ public class AccountController {
         return accountService.createAccount(newAccount);
     }
 
+    @PostMapping("/deposit/{id}/{amount}")
+    public AccountDTO accountId(@PathVariable int id, @PathVariable BigDecimal amount) {
+        return accountService.depositId(id, amount);
+    }
+
     @GetMapping("/account/{lastName}")
     public AccountDTO account(@PathVariable(name = "lastName") String lastName) {
         return accountService.getAccount(lastName);
     }
 
+    @GetMapping("/account/first/{fout irstName}")
+    public AccountDTO accountFirstName(@PathVariable(name = "firstName") String firstName) {
+        return accountService.getAccountFirstName(firstName);
+    }
 }
