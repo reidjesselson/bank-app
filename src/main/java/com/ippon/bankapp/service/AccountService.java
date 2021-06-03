@@ -62,7 +62,20 @@ public class AccountService {
                 .orElseThrow(AccountNotFoundException::new);
 
         account.setBalance(account.getBalance().add(amount));
-        return mapAccountToDTO(account);
+        Account save = accountRepository.save(account);
+
+        return mapAccountToDTO(save);
+    }
+
+    public AccountDTO withdrawId(int id, BigDecimal amount) {
+        Account account = accountRepository
+                .findById(id)
+                .orElseThrow(AccountNotFoundException::new);
+
+        account.setBalance(account.getBalance().subtract(amount));
+        Account save = accountRepository.save(account);
+
+        return mapAccountToDTO(save);
     }
 
     private void validateLastNameUnique(String lastName) {

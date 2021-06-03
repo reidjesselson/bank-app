@@ -25,8 +25,13 @@ public class AccountController {
     }
 
     @PostMapping("/deposit/{id}/{amount}")
-    public AccountDTO accountId(@PathVariable int id, @PathVariable BigDecimal amount) {
+    public AccountDTO accountDeposit(@PathVariable int id, @PathVariable BigDecimal amount) {
         return accountService.depositId(id, amount);
+    }
+
+    @PostMapping("/withdawal/{id}/{amount}")
+    public AccountDTO accountWithdrawal(@PathVariable int id, @PathVariable BigDecimal amount) {
+        return accountService.withdrawId(id, amount);
     }
 
     @GetMapping("/account/{lastName}")
