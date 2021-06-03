@@ -3,6 +3,7 @@ package com.ippon.bankapp.service;
 import com.ippon.bankapp.domain.Account;
 import com.ippon.bankapp.repository.AccountRepository;
 import com.ippon.bankapp.service.dto.AccountDTO;
+import com.ippon.bankapp.service.dto.AmountDTO;
 import com.ippon.bankapp.service.exception.AccountLastNameExistsException;
 import com.ippon.bankapp.service.exception.AccountNotFoundException;
 import org.springframework.stereotype.Service;
@@ -56,26 +57,50 @@ public class AccountService {
         return mapAccountToDTO(account);
     }
 
-    public AccountDTO depositId(int id, BigDecimal amount) {
+    public AccountDTO depositId(int id, AmountDTO amount) {
         Account account = accountRepository
                 .findById(id)
                 .orElseThrow(AccountNotFoundException::new);
-
-        account.setBalance(account.getBalance().add(amount));
+        BigDecimal amountVal = amount.getAmount();
+        account.setBalance(account.getBalance().add(amountVal));
         Account save = accountRepository.save(account);
 
         return mapAccountToDTO(save);
     }
 
-    public AccountDTO withdrawId(int id, BigDecimal amount) {
+    public AccountDTO withdrawId(int id, AmountDTO amount) {
         Account account = accountRepository
                 .findById(id)
                 .orElseThrow(AccountNotFoundException::new);
 
-        account.setBalance(account.getBalance().subtract(amount));
+        BigDecimal amountVal = amount.getAmount();
+        if (amountVal.compareTo(account.getBalance()) != 1) {
+            account.setBalance(account.getBalance().subtract(amountVal));
+        }
+
         Account save = accountRepository.save(account);
 
         return mapAccountToDTO(save);
+    }
+
+    public AccountDTO transferBal(int id1, int id2, AmountDTO amount) {
+        Account account1 = accountRepository
+                .findById(id1)
+                .orElseThrow(AccountNotFoundException::new);
+        Account account2 = accountRepository
+                .findById(id2)
+                .orElseThrow(AccountNotFoundException::new);
+
+        BigDecimal amountVal = amount.getAmount();
+        if (amountVal.compareTo(account1.getBalance()) != 1) {
+            account1.setBalance(account1.getBalance().subtract(amountVal));
+            account2.setBalance(account2.getBalance().add(amountVal));
+        }
+
+        Account save1 = accountRepository.save(account1);
+        Account save2 = accountRepository.save(account2);
+
+        return mapAccountToDTO(save2);
     }
 
     private void validateLastNameUnique(String lastName) {

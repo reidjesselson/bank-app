@@ -1,7 +1,9 @@
 package com.ippon.bankapp.rest;
 
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.ippon.bankapp.service.AccountService;
 import com.ippon.bankapp.service.dto.AccountDTO;
+import com.ippon.bankapp.service.dto.AmountDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,14 +26,22 @@ public class AccountController {
         return accountService.createAccount(newAccount);
     }
 
-    @PostMapping("/deposit/{id}/{amount}")
-    public AccountDTO accountDeposit(@PathVariable int id, @PathVariable BigDecimal amount) {
+    @PostMapping("/deposit/{id}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AccountDTO accountDeposit(@Valid @RequestBody AmountDTO amount, @PathVariable int id) {
         return accountService.depositId(id, amount);
     }
 
-    @PostMapping("/withdawal/{id}/{amount}")
-    public AccountDTO accountWithdrawal(@PathVariable int id, @PathVariable BigDecimal amount) {
+    @PostMapping("/withdraw/{id}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AccountDTO accountWithdrawal(@Valid @RequestBody AmountDTO amount, @PathVariable int id) {
         return accountService.withdrawId(id, amount);
+    }
+
+    @PostMapping("/transfer/{id1}/{id2}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AccountDTO accountWithdrawal(@Valid @RequestBody AmountDTO amount, @PathVariable int id1, @PathVariable int id2) {
+        return accountService.transferBal(id1, id2, amount);
     }
 
     @GetMapping("/account/{lastName}")
@@ -39,7 +49,7 @@ public class AccountController {
         return accountService.getAccount(lastName);
     }
 
-    @GetMapping("/account/first/{fout irstName}")
+    @GetMapping("/account/first/{firstName}")
     public AccountDTO accountFirstName(@PathVariable(name = "firstName") String firstName) {
         return accountService.getAccountFirstName(firstName);
     }
