@@ -15,12 +15,12 @@ public class AmountDTO {
         return amount;
     }
 
-    public AmountDTO amount(BigDecimal amount){
-        this.amount = amount;
-        return this;
-    }
-
     public void setAmount(BigDecimal amount) {
-        this.amount = amount;
+        if (amount.compareTo(BigDecimal.ZERO)==1) {
+            this.amount = amount;
+        }
+        else{
+            throw new IllegalArgumentException("amount must be greater than 0");
+        }
     }
 }

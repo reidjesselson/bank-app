@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ippon.bankapp.rest.errors.RestErrorHandler;
 import com.ippon.bankapp.service.AccountService;
 import com.ippon.bankapp.service.dto.AccountDTO;
+import com.ippon.bankapp.service.dto.AmountDTO;
 import com.ippon.bankapp.service.exception.AccountLastNameExistsException;
 import com.ippon.bankapp.service.exception.AccountNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,14 +13,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -141,5 +145,72 @@ class AccountControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newAccount)))
                 .andExpect(status().isConflict());
+    }
+
+    @Test
+    public void depositValid() throws Exception{
+        AmountDTO amount = new AmountDTO();
+        amount.setAmount(BigDecimal.TEN);
+
+        mockMvc
+                .perform(post("/api/deposit/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(amount)))
+                .andExpect(status().isAccepted());
+    }
+
+    @Test
+    public void withdrawValid() throws Exception{
+        AmountDTO amount = new AmountDTO();
+        amount.setAmount(BigDecimal.TEN);
+
+        mockMvc
+                .perform(post("/api/withdraw/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(amount)))
+                .andExpect(status().isAccepted());
+    }
+    @Test
+    public void transferValid() throws Exception{
+        AmountDTO amount = new AmountDTO();
+        amount.setAmount(BigDecimal.TEN);
+
+        mockMvc
+                .perform(post("/api/transfer/1/2")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(amount)))
+                .andExpect(status().isAccepted());
+    }
+    @Test
+    public void depositMissingAmount() throws Exception{
+        AmountDTO amount = new AmountDTO();
+
+        mockMvc
+                .perform(post("/api/deposit/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(amount)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void withdrawMissingAmount() throws Exception{
+        AmountDTO amount = new AmountDTO();
+
+        mockMvc
+                .perform(post("/api/withdraw/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(amount)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void transferMissingAmount() throws Exception{
+        AmountDTO amount = new AmountDTO();
+
+        mockMvc
+                .perform(post("/api/transfer/1/2")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(amount)))
+                .andExpect(status().isBadRequest());
     }
 }

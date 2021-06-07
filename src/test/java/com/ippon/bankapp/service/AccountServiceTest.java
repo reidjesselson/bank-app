@@ -3,6 +3,7 @@ package com.ippon.bankapp.service;
 import com.ippon.bankapp.domain.Account;
 import com.ippon.bankapp.repository.AccountRepository;
 import com.ippon.bankapp.service.dto.AccountDTO;
+import com.ippon.bankapp.service.dto.AmountDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -15,6 +16,7 @@ import java.util.Optional;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -73,5 +75,63 @@ public class AccountServiceTest {
         assertThat(message.getAllValues().get(2), is("Account Created"));
         assertThat(message.getAllValues().get(3), is("Welcome aboard!"));
     }
+    @Test
+    public void depositIntoAccount() {
+        Account account = new Account();
+        account.setFirstName("Reid");
+        account.setLastName("Jesselson");
+        account.setBalance(BigDecimal.ZERO);
+        int id = account.getId();
 
+        given(accountRepository.findById(id)).willReturn(Optional.of(account));
+        given(accountRepository.save(account)).willReturn(account);
+
+        AmountDTO depo = new AmountDTO();
+        depo.setAmount(BigDecimal.valueOf(10));
+        AccountDTO accountDepo = subject.depositId(id, depo);
+
+        assertThat(accountDepo.getBalance(), is(BigDecimal.valueOf(10)));
+    }
+
+    @Test
+    public void makeAmountForTransactionLessThanOneCent() {
+        AmountDTO amount = new AmountDTO();
+
+        assertThrows(IllegalArgumentException.class, () -> amount.setAmount(BigDecimal.valueOf(0)));
+    }
+
+
+    @Test
+    public void withdrawFromAccount() {
+        Account account = new Account();
+        account.setFirstName("Reid");
+        account.setLastName("Jesselson");
+        account.setBalance(BigDecimal.valueOf(10));
+        int id = account.getId();
+
+        given(accountRepository.findById(id)).willReturn(Optional.of(account));
+        given(accountRepository.save(account)).willReturn(account);
+
+        AmountDTO withdraw = new AmountDTO();
+        withdraw.setAmount(BigDecimal.valueOf(10));
+        AccountDTO accountWithdraw= subject.withdrawId(id, withdraw);
+
+        assertThat(accountWithdraw.getBalance(), is(BigDecimal.ZERO));
+    }
+
+    @Test
+    public void withdrawMoreThanBalanceFromAccount() {
+        Account account = new Account();
+        account.setFirstName("Reid");
+        account.setLastName("Jesselson");
+        account.setBalance(BigDecimal.valueOf(10));
+        int id = account.getId();
+
+        given(accountRepository.findById(id)).willReturn(Optional.of(account));
+
+        AmountDTO withdraw = new AmountDTO();
+        withdraw.setAmount(BigDecimal.valueOf(11));
+
+        assertThrows(IllegalArgumentException.class, () -> subject.withdrawId(id, withdraw));
+    }
 }
