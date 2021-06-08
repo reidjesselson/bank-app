@@ -1,6 +1,7 @@
 package com.ippon.bankapp.rest;
 
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.ippon.bankapp.domain.Transaction;
 import com.ippon.bankapp.service.AccountService;
 import com.ippon.bankapp.service.dto.AccountDTO;
 import com.ippon.bankapp.service.dto.AmountDTO;
@@ -10,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -54,5 +57,11 @@ public class AccountController {
     public AccountDTO accountFirstName(@PathVariable(name = "firstName") String firstName) {
         return accountService.getAccountFirstName(firstName);
     }
+
+    @GetMapping("/transactions/{id}")
+    public List<Transaction> transactionHistory(@PathVariable(name = "id") int id) {
+        return accountService.getLastTransaction(id);
+    }
+
 
 }

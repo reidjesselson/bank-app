@@ -2,8 +2,11 @@ package com.ippon.bankapp.service;
 
 import com.ippon.bankapp.domain.Account;
 import com.ippon.bankapp.repository.AccountRepository;
+import com.ippon.bankapp.repository.TransactionRepository;
 import com.ippon.bankapp.service.dto.AccountDTO;
 import com.ippon.bankapp.service.dto.AmountDTO;
+import com.ippon.bankapp.service.exception.DepositLimitReachedException;
+import com.ippon.bankapp.service.exception.InsufficientFundsException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -29,6 +32,9 @@ public class AccountServiceTest {
 
     @Mock
     private NotificationFactory notificationFactory;
+
+    @Mock
+    private TransactionRepository transactionRepository;
 
     @Mock
     private EmailService emailService;
@@ -75,6 +81,7 @@ public class AccountServiceTest {
         assertThat(message.getAllValues().get(2), is("Account Created"));
         assertThat(message.getAllValues().get(3), is("Welcome aboard!"));
     }
+
     @Test
     public void depositIntoAccount() {
         Account account = new Account();
@@ -99,7 +106,33 @@ public class AccountServiceTest {
 
         assertThrows(IllegalArgumentException.class, () -> amount.setAmount(BigDecimal.valueOf(0)));
     }
+    @Test
+    public void transferBetweenAccounts() {
+        Account sender = new Account();
+        sender.setFirstName("Reid");
+        sender.setLastName("Jesselson");
+        sender.setBalance(BigDecimal.valueOf(10));
+        sender.setId(3);
+        int id = sender.getId();
 
+        Account receiver = new Account();
+        receiver.setFirstName("Test");
+        receiver.setLastName("Account");
+        receiver.setBalance(BigDecimal.ZERO);
+        int idReceiver = receiver.getId();
+
+        given(accountRepository.findById(id)).willReturn(Optional.of(sender));
+        given(accountRepository.save(sender)).willReturn(sender);
+
+        given(accountRepository.findById(idReceiver)).willReturn(Optional.of(receiver));
+        given(accountRepository.save(receiver)).willReturn(receiver);
+
+        AmountDTO transfer = new AmountDTO();
+        transfer.setAmount(BigDecimal.valueOf(5));
+        AccountDTO accountTransfer = subject.transferBal(id, idReceiver, transfer);
+
+        assertThat(accountTransfer.getBalance(), is(BigDecimal.valueOf(5)));
+    }
 
     @Test
     public void withdrawFromAccount() {
@@ -132,6 +165,22 @@ public class AccountServiceTest {
         AmountDTO withdraw = new AmountDTO();
         withdraw.setAmount(BigDecimal.valueOf(11));
 
-        assertThrows(IllegalArgumentException.class, () -> subject.withdrawId(id, withdraw));
+        assertThrows(InsufficientFundsException.class, () -> subject.withdrawId(id, withdraw));
     }
+    @Test
+    public void depositMoreThanLimit() {
+        Account account = new Account();
+        account.setFirstName("Reid");
+        account.setLastName("Jesselson");
+        account.setBalance(BigDecimal.valueOf(0));
+        int id = account.getId();
+
+        given(accountRepository.findById(id)).willReturn(Optional.of(account));
+
+        AmountDTO deposit = new AmountDTO();
+        deposit.setAmount(BigDecimal.valueOf(5001));
+
+        assertThrows(DepositLimitReachedException.class, () -> subject.depositId(id, deposit));
+    }
+
 }

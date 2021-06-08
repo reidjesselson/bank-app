@@ -9,12 +9,15 @@ import com.ippon.bankapp.service.dto.AmountDTO;
 import com.ippon.bankapp.service.dto.TransactionDTO;
 import com.ippon.bankapp.service.exception.AccountLastNameExistsException;
 import com.ippon.bankapp.service.exception.AccountNotFoundException;
+import com.ippon.bankapp.service.exception.DepositLimitReachedException;
+import com.ippon.bankapp.service.exception.InsufficientFundsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.naming.InsufficientResourcesException;
 import java.math.BigDecimal;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class AccountService {
@@ -23,7 +26,9 @@ public class AccountService {
     private AccountRepository accountRepository;
     private NotificationFactory notificationFactory;
     private final TransactionRepository transactionRepository;
-
+    private int count;
+    private BigDecimal depoSum;
+    private BigDecimal depoLimit;
     @Autowired(required = true)
     public AccountService(AccountRepository accountRepository, NotificationFactory notificationFactory, TransactionRepository transactionRepository) {
         this.accountRepository = accountRepository;
@@ -72,16 +77,33 @@ public class AccountService {
         Account account = accountRepository
                 .findById(id)
                 .orElseThrow(AccountNotFoundException::new);
-
         BigDecimal amountVal = amount.getAmount();
-        account.setBalance(account.getBalance().add(amountVal));
+        depoLimit = getDepositLimit(account);
+        if (depoLimit.add(amountVal).compareTo(BigDecimal.valueOf(5000)) != 1){
+            account.setBalance(account.getBalance().add(amountVal));
 
-        Transaction deposit = new Transaction("deposit", amountVal, account.getFirstName(), account.getLastName(), "", "");
-        transactionRepository.save(deposit);
+            Transaction deposit = new Transaction("deposit", amountVal, account, LocalDate.now());
+            transactionRepository.save(deposit);
+        }
+        else{
+            throw new DepositLimitReachedException();
+        }
 
         Account save = accountRepository.save(account);
-
         return mapAccountToDTO(save);
+    }
+
+    public BigDecimal getDepositLimit(Account account){
+        count = 0;
+        depoSum = BigDecimal.ZERO;
+        ArrayList<Transaction> transactions = transactionRepository.findAllByAccount(account);
+        while(transactions.size() > count) {
+            if ((transactions.get(count).getDateTime().isEqual(LocalDate.now())) && (transactions.get(count).getTransactionType() == "deposit")){
+                depoSum = depoSum.add(transactions.get(count).getAmount());
+            }
+            count++;
+        }
+        return depoSum;
     }
 
     public AccountDTO withdrawId(int id, AmountDTO amount) {
@@ -94,9 +116,10 @@ public class AccountService {
             account.setBalance(account.getBalance().subtract(amountVal));
         }
         else {
-            throw new IllegalArgumentException("Withdrawing more than balance");
+            throw new InsufficientFundsException();
         }
-
+        Transaction withdrawal = new Transaction("withdrawal", amountVal, account, LocalDate.now());
+        transactionRepository.save(withdrawal);
         Account save = accountRepository.save(account);
 
         return mapAccountToDTO(save);
@@ -111,14 +134,22 @@ public class AccountService {
                 .orElseThrow(AccountNotFoundException::new);
 
         BigDecimal amountVal = amount.getAmount();
+        System.out.println(amountVal);
+        System.out.println(account1.getBalance());
         if (amountVal.compareTo(account1.getBalance()) != 1) {
             account1.setBalance(account1.getBalance().subtract(amountVal));
             account2.setBalance(account2.getBalance().add(amountVal));
+            System.out.println("transfering");
         }
+        Transaction transferSent = new Transaction("Transfer sent", amountVal, account1, LocalDate.now());
+        Transaction transferReceived = new Transaction("Transfer received", amountVal, account2, LocalDate.now());
+        transactionRepository.save(transferSent);
+        transactionRepository.save(transferReceived);
 
         Account save1 = accountRepository.save(account1);
         Account save2 = accountRepository.save(account2);
-
+        System.out.println("val");
+        System.out.println(save2.getBalance());
         return mapAccountToDTO(save2);
     }
 
@@ -135,5 +166,27 @@ public class AccountService {
                 .balance(account.getBalance())
                 .notificationPreference(account.getNotificationPreference());
     }
+
+    private TransactionDTO mapTransactionToDTO(Transaction transaction){
+        return new TransactionDTO()
+                .transactionType(transaction.getTransactionType())
+                .amount(transaction.getAmount())
+                .account(transaction.getAccount())
+                .dateTime(transaction.getDateTime());
+    }
+
+   public List<Transaction> getLastTransaction(int id) {
+       Account account = accountRepository
+               .findById(id)
+               .orElseThrow(AccountNotFoundException::new);
+        ArrayList<Transaction> transactions = transactionRepository.findAllByAccount(account);
+        if(transactions.size() < 10) {
+            return transactions.subList(0, transactions.size());
+        }
+        else{
+            return transactions.subList(transactions.size() - 10, transactions.size());
+        }
+    }
+
 
 }

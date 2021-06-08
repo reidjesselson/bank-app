@@ -2,7 +2,9 @@ package com.ippon.bankapp.domain;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table(name = "account")
@@ -23,6 +25,9 @@ public class Account {
 
     @Column(name = "notification_preference")
     private String notificationPreference;
+
+    @OneToMany(mappedBy = "account")
+    private List<Transaction> transactionList;
 
     public Account() {}
 
@@ -57,6 +62,9 @@ public class Account {
         this.lastName = lastName;
     }
 
+    public void setId(int id){
+        this.id = id;
+    }
     public int getId() {
         return id;
     }

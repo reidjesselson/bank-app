@@ -1,7 +1,10 @@
 package com.ippon.bankapp.service.dto;
 
+import com.ippon.bankapp.domain.Account;
+
 import javax.validation.constraints.NotEmpty;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Objects;
 
 public class TransactionDTO {
@@ -9,19 +12,15 @@ public class TransactionDTO {
     private String transactionType;
 
     @NotEmpty
-    private String senderFirstName;
-
-    @NotEmpty
-    private String senderLastName;
+    private Account account;
 
     @NotEmpty
     private BigDecimal amount;
 
-    private String receiverFirstName;
+    @NotEmpty
+    private LocalDate dateTime;
 
-    private String receiverLastName;
-
-    public TransactionDTO(){
+    public TransactionDTO() {
 
     }
 
@@ -37,31 +36,28 @@ public class TransactionDTO {
     public void setTransactionType(String transactionType) {
         this.transactionType = transactionType;
     }
-    public String getSenderFirstName() {
-        return senderFirstName;
-    }
 
-    public TransactionDTO senderFirstName(String senderFirstName) {
-        this.senderFirstName = senderFirstName;
+    public LocalDate getDateTime() { return dateTime; }
+
+    public TransactionDTO dateTime(LocalDate dateTime) {
+        this.dateTime = dateTime;
         return this;
     }
 
-    public void setSenderFirstName(String senderFirstName) {
-        this.senderFirstName = senderFirstName;
+    public void setDateTime(LocalDate dateTime) { this.dateTime = dateTime; }
+    public Account getAccount() {
+        return account;
     }
 
-    public String getSenderLastName() {
-        return senderLastName;
-    }
-
-    public TransactionDTO senderLastName(String senderLastName) {
-        this.senderLastName = senderLastName;
+    public TransactionDTO account(Account account) {
+        this.account = account;
         return this;
     }
 
-    public void setSenderLastName(String senderLastName) {
-        this.senderLastName = senderLastName;
+    public void setAccount(Account account) {
+        this.account = account;
     }
+
 
     public BigDecimal getAmount() {
         return amount;
@@ -74,31 +70,5 @@ public class TransactionDTO {
 
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
-    }
-
-    public String getReceiverFirstName() {
-        return receiverFirstName;
-    }
-
-    public TransactionDTO receiverFirstName(String receiverFirstName) {
-        this.receiverFirstName = receiverFirstName;
-        return this;
-    }
-
-    public void setReceiverFirstName(String receiverFirstName) {
-        this.receiverFirstName = receiverFirstName;
-    }
-
-    public String getReceiverLastName() {
-        return receiverLastName;
-    }
-
-    public TransactionDTO receiverLastName(String receiverLastName) {
-        this.receiverLastName = receiverLastName;
-        return this;
-    }
-
-    public void setReceiverLastName(String receiverLastName) {
-        this.receiverLastName = receiverLastName;
     }
 }
