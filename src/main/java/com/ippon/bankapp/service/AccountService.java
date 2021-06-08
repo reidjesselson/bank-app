@@ -181,11 +181,14 @@ public class AccountService {
                .orElseThrow(AccountNotFoundException::new);
         ArrayList<Transaction> transactions = transactionRepository.findAllByAccount(account);
         if(transactions.size() < 10) {
+            accountRepository.save(account);
             return transactions.subList(0, transactions.size());
         }
         else{
+            accountRepository.save(account);
             return transactions.subList(transactions.size() - 10, transactions.size());
         }
+
     }
 
 

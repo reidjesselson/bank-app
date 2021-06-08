@@ -1,12 +1,14 @@
 package com.ippon.bankapp.service;
 
 import com.ippon.bankapp.domain.Account;
+import com.ippon.bankapp.domain.Transaction;
 import com.ippon.bankapp.repository.AccountRepository;
 import com.ippon.bankapp.repository.TransactionRepository;
 import com.ippon.bankapp.service.dto.AccountDTO;
 import com.ippon.bankapp.service.dto.AmountDTO;
 import com.ippon.bankapp.service.exception.DepositLimitReachedException;
 import com.ippon.bankapp.service.exception.InsufficientFundsException;
+import io.cucumber.java.bs.A;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -15,6 +17,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.is;
@@ -181,6 +186,30 @@ public class AccountServiceTest {
         deposit.setAmount(BigDecimal.valueOf(5001));
 
         assertThrows(DepositLimitReachedException.class, () -> subject.depositId(id, deposit));
+    }
+
+    @Test
+    public void lastTenTransactions(){
+        Account account = new Account();
+        account.setFirstName("Reid");
+        account.setLastName("Jesselson");
+        account.setBalance(BigDecimal.valueOf(0));
+        int id = account.getId();
+
+        given(accountRepository.findById(id)).willReturn(Optional.of(account));
+        given(accountRepository.save(account)).willReturn(account);
+
+        Transaction deposit = new Transaction("deposit", BigDecimal.valueOf(10), account, LocalDate.now());
+
+        AmountDTO depoAmount = new AmountDTO();
+        depoAmount.setAmount(BigDecimal.valueOf(10));
+        subject.depositId(id, depoAmount);
+        ArrayList<Transaction> transactions = new ArrayList<>();
+        transactions.add(deposit);
+
+        given(transactionRepository.findAllByAccount(account)).willReturn(transactions);
+
+        assertThat(subject.getLastTransaction(id).size(), is(1));
     }
 
 }
